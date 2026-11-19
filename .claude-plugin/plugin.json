@@ -1,0 +1,8 @@
+{
+  "name": "plip-pet",
+  "version": "0.5.0",
+  "description": "Plip, a tiny pixel water droplet who keeps you company and reacts to what Claude is doing",
+  "author": { "name": "omprabhu31" },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}

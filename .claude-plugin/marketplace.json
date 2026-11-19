@@ -1,0 +1,13 @@
+{
+  "name": "plip",
+  "owner": {
+    "name": "omprabhu31"
+  },
+  "description": "Plip, a cute pixel water droplet pet for Claude Code",
+  "plugins": [
+    {
+      "name": "plip-pet",
+      "source": "./"
+    }
+  ]
+}
