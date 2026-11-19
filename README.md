@@ -8,21 +8,7 @@ while Claude works, cheers when a task is done, and loves being petted.
 
 ## Install
 
-This repository is private, so your computer needs a git login for GitHub
-before Claude Code can download it. Do this once:
-
-```bash
-gh auth login
-```
-
-```bash
-gh auth setup-git
-```
-
-(An SSH key added to your GitHub account also works.) The install never asks
-for a password; without a login it just fails to fetch the repository.
-
-Then install Plip in **one** of these ways.
+Install Plip in **one** of these ways. No GitHub account is needed.
 
 **From a Claude Code terminal session**, at the prompt:
 
@@ -61,10 +47,15 @@ Plip opens by itself at the start of every session.
 ## Plip on your desktop (macOS)
 
 Plip can also float above all your windows, outside the Claude app, and start
-by itself when you log in. From this repository's folder, run:
+by itself when you log in. Get a copy of this repository and run its
+installer:
 
 ```bash
-./overlay/install.sh
+git clone https://github.com/omprabhu31/plip-pet.git ~/plip-pet
+```
+
+```bash
+~/plip-pet/overlay/install.sh
 ```
 
 This builds **Plip Overlay** (it needs `swiftc`, from the Xcode command line
@@ -123,8 +114,9 @@ many times you've petted it.
 - **The overlay shows a plain 💧 or just dozes**: start a Claude session.
   The plugin writes Plip's art and mood to `~/.plip` when a session starts.
   Plip's status tool reports the overlay bridge under `overlay`.
-- **Install fails to fetch the repository**: your git login for GitHub is
-  missing; see the start of **Install**.
+- **Install fails to fetch the repository**: check that `git` is installed
+  (on a Mac, `xcode-select --install` adds it) and that you can reach
+  github.com.
 
 ## Update or remove
 
