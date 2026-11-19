@@ -9,4 +9,6 @@ pkill -x PlipOverlay 2>/dev/null
 rm -f "$HOME/Library/LaunchAgents/$LABEL.plist"
 rm -rf "$HOME/Applications/Plip Overlay.app"
 rm -f "$HOME/.plip/overlay-installed"
+rm -f "$HOME/.plip/overlay-disabled"
+launchctl enable "gui/$(id -u)/$LABEL" 2>/dev/null
 echo "Plip Overlay removed."

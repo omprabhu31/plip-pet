@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Mood, Stats } from '../types'
 import { petCells, petSvg, RASTER_COLUMNS, RASTER_ROWS } from './sprite'
-import { claimOverlayPets, overlayStatus, publish, startOverlayBridge, stopOverlayBridge } from './overlay'
+import { claimOverlayPets, overlayCommand, overlayStatus, publish, startOverlayBridge, stopOverlayBridge } from './overlay'
 
 const PANE = 'plip'
 const SLEEP_AFTER_MS = 5 * 60 * 1000
@@ -81,7 +81,11 @@ export const register: Register = on => {
       await update($, stats, () => ({ pets: saved.pets ?? 0, splashes: saved.splashes ?? 0 }))
     }
     live.lastActivity = await $.clock.now()
-    await $.command.register({ name: 'plip', description: 'Bring back Plip, your water droplet pet' })
+    await $.command.register({
+      name: 'plip',
+      description: 'Bring back Plip, your water droplet pet; `overlay on|off` turns its desktop overlay on or off',
+      argumentHint: '[overlay on|off]',
+    })
     const snapshot = async () => {
       const [m, s, n] = [await read($, mood), await read($, stats), await read($, tools)]
       return { mood: m, line: lineFor(m, s, n), pets: s.pets, splashes: s.splashes, tools: n }
@@ -90,8 +94,8 @@ export const register: Register = on => {
     // in the app's corner; a terminal session still gets its pane.
     void startOverlayBridge($, snapshot, petSvg)
       .then(async overlay => {
-        const surfaces = overlay.isInstalled ? await $.session.surfaces() : []
-        if (!overlay.isInstalled || surfaces.includes('terminal')) await openPlip($, true)
+        const surfaces = overlay.isOn ? await $.session.surfaces() : []
+        if (!overlay.isOn || surfaces.includes('terminal')) await openPlip($, true)
       })
       .catch(() => openPlip($, true))
     await $.tool.register({
@@ -149,7 +153,15 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'plip' }, async $ => {
+  on('command.run', { command: 'plip' }, async ($, e) => {
+    const [sub, wanted] = e.args.trim().toLowerCase().split(/\s+/)
+    if (sub === 'overlay') {
+      const reply = await overlayCommand($, wanted)
+      // With the overlay off, Plip goes back to the app's corner straight away.
+      if (reply.isOff && wanted === 'off') await openPlip($, true)
+      return { text: reply.text }
+    }
+
     await openPlip($, false)
     await feel($, 'happy', 3000)
 

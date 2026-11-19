@@ -101,3 +101,50 @@ test('the desktop overlay hears moods, and pets given on it count once', async (
   expect(state().pets).toBe(3)
   expect(state().mood).toBe('working') // the overlay draws its own hearts
 })
+
+test('/plip overlay turns the desktop overlay off and on again', async ($, on) => {
+  const files = new Map<string, string>([['/Users/u/.plip/overlay-installed', '']])
+  const runs: string[] = []
+  let opened = 0
+  const clock = mock.clock(on, { now: 1_000 })
+  mock.store(on)
+  on('command.register', () => ({ value: { command: 'plip' } }))
+  on('tool.register', () => ({ value: { tool: 'mcp__plip-pet__status' } }))
+  on('ui.open', () => ((opened += 1), { value: { isPlaced: true } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.id', () => ({ value: 'abc' }))
+  on('session.surfaces', () => ({ value: ['desktop'] }))
+  on('fs.exists', (_, e) => ({ value: files.has(e.path) }))
+  on('fs.write', (_, e) => (files.set(e.path, e.text), { value: undefined }))
+  on('fs.list', () => ({ value: [] }))
+  on('process.run', (_, e) => {
+    runs.push(e.argv.join(' '))
+    const out = (stdout: string, exitCode = 0) => ({ value: { exitCode, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } })
+    const [cmd, ...args] = e.argv
+    if (cmd === '/usr/bin/uname') return out('Darwin\n')
+    if (cmd === '/bin/sh') return out('/Users/u\n')
+    if (cmd === '/usr/bin/id') return out('501\n')
+    if (cmd === '/bin/rm') return (files.delete(args[args.length - 1] ?? ''), out(''))
+    return out('')
+  })
+
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  await clock.settle()
+  const plip = (args: string) => $.command.run({ command: 'plip', args } as Parameters<typeof $.command.run>[0])
+  expect(opened).toBe(0) // the overlay is on, so the app's corner stays clear
+
+  const off = await plip('overlay off')
+  expect(off.text).toContain('Plip Overlay is off')
+  expect(files.has('/Users/u/.plip/overlay-disabled')).toBe(true)
+  expect(runs).toContain('/bin/launchctl disable gui/501/com.omprabhu31.plip-overlay')
+  expect(runs).toContain('/bin/launchctl bootout gui/501/com.omprabhu31.plip-overlay')
+  expect(opened).toBe(1) // and Plip is back in the corner
+
+  expect((await plip('overlay')).text).toContain('overlay is off')
+
+  const back = await plip('overlay on')
+  expect(back.text).toContain('Plip Overlay is on')
+  expect(files.has('/Users/u/.plip/overlay-disabled')).toBe(false)
+  expect(runs).toContain('/bin/launchctl enable gui/501/com.omprabhu31.plip-overlay')
+  expect(runs).toContain('/bin/launchctl kickstart gui/501/com.omprabhu31.plip-overlay')
+})

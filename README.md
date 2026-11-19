@@ -68,9 +68,22 @@ with your Mac just like the Claude desktop app does. macOS may show a
 - **Option-click** to pet it. Pets count toward the same total as the pane's button.
 - **Hover** over Plip to pet it: heart eyes while the pointer is on it, back to normal the moment it leaves. Each visit counts as one pet; move away for a few seconds to pet it again.
 - **Play something in Apple Music** and Plip dances, switching at random every 10 to 15 seconds between ten dances: the groove, a twirl under sweeping spotlights, confetti jumps, the robot, head-banging with lightning, a moonwalk through fog, a breakdance windmill, a party with two tiny droplet friends, a jelly wobble, and rainbow mode. It stops when the music pauses, stops or Music quits. Only Apple Music counts, and if music was already playing when Plip started, it joins in at the next play, pause or track change.
-- **Right-click** to open Claude, pet, turn dancing to Apple Music on or off, change its size (Tiny, Small, Medium, Large; Medium, 100 points wide, is the default), move it back to the corner, or quit until your next login.
+- **Right-click** to open Claude, pet, turn dancing to Apple Music on or off, change its size (Tiny, Small, Medium, Large; Medium, 100 points wide, is the default), move it back to the corner, hide it until your next login, or turn the overlay off.
 
-While the overlay is installed, the desktop app no longer opens its corner
+### Turning the overlay off and on
+
+Type these in any Claude session:
+
+- **`/plip overlay off`**: closes the overlay and stops it starting at login.
+  Plip goes back to the desktop app's corner straight away.
+- **`/plip overlay on`**: starts it again, login item included.
+- **`/plip overlay`**: says whether it's on or off.
+
+**Turn Off Overlay** in Plip's right-click menu does the same as `/plip
+overlay off`, and opening **Plip Overlay** from `~/Applications` (or
+Spotlight) turns it back on.
+
+While the overlay is on, the desktop app no longer opens its corner
 widget (terminal sessions keep their pane, and `/plip` still opens the pane
 anywhere). With several sessions open, the overlay shows one Plip for all of
 them: a fresh reaction first, then any session at work. When no session is
@@ -85,7 +98,8 @@ overlay's code, run `./overlay/install.sh` again. To remove it:
 
 ## Usage
 
-- **`/plip`**: brings Plip back if you closed it.
+- **`/plip`**: brings Plip back if you closed it. `/plip overlay on|off` turns
+  the desktop overlay on or off.
 - **Pet Plip**: press the button (or `p` while the pane has focus) for heart
   eyes and floating hearts. Your pet count is saved across sessions.
 - **Moods**: Plip changes mood on its own.

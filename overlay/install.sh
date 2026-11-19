@@ -33,7 +33,7 @@ cat > "$BUILD/Plip Overlay.app/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>Plip Overlay</string>
   <key>CFBundleExecutable</key><string>PlipOverlay</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.5.0</string>
+  <key>CFBundleShortVersionString</key><string>0.6.0</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
@@ -68,6 +68,9 @@ cat > "$AGENT" <<PLIST
   <key>ProcessType</key><string>Interactive</string>
 </dict></plist>
 PLIST
+# Installing turns the overlay on, even if `/plip overlay off` turned it off.
+rm -f "$HOME/.plip/overlay-disabled"
+launchctl enable "gui/$(id -u)/$LABEL"
 launchctl bootstrap "gui/$(id -u)" "$AGENT"
 
 echo "Plip Overlay is installed and running; it starts at every login."

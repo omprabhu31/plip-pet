@@ -388,7 +388,8 @@ final class Overlay: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         vibe.state = isVibeOn ? .on : .off
         m.addItem(withTitle: "Move Plip Back to the Corner", action: #selector(resetPosition), keyEquivalent: "").target = self
         m.addItem(.separator())
-        m.addItem(withTitle: "Quit Plip Overlay", action: #selector(quit), keyEquivalent: "").target = self
+        m.addItem(withTitle: "Hide Until Next Login", action: #selector(quit), keyEquivalent: "").target = self
+        m.addItem(withTitle: "Turn Off Overlay", action: #selector(turnOff), keyEquivalent: "").target = self
         return m
     }
 
@@ -421,15 +422,48 @@ final class Overlay: NSObject, NSApplicationDelegate, WKNavigationDelegate {
 
     // A clean exit: launchd leaves Plip closed until the next login.
     @objc func quit() { NSApp.terminate(nil) }
+
+    /// Off for good: no start at login, and the plugin puts Plip back in the
+    /// Claude app's corner. `/plip overlay on`, or opening Plip Overlay
+    /// yourself, turns it back on.
+    @objc func turnOff() {
+        FileManager.default.createFile(atPath: disabledMarker.path, contents: Data())
+        launchctl("disable", "gui/\(getuid())/\(serviceLabel)")
+        NSApp.terminate(nil)
+    }
+}
+
+let serviceLabel = "com.omprabhu31.plip-overlay"
+let disabledMarker = plipDir.appendingPathComponent("overlay-disabled")
+
+@discardableResult
+func launchctl(_ args: String...) -> Int32 {
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+    p.arguments = args
+    p.standardOutput = FileHandle.nullDevice
+    p.standardError = FileHandle.nullDevice
+    guard (try? p.run()) != nil else { return -1 }
+    p.waitUntilExit()
+    return p.terminationStatus
 }
 
 let args = CommandLine.arguments
 let snapshotPath = args.firstIndex(of: "--snapshot").flatMap { args.indices.contains($0 + 1) ? args[$0 + 1] : nil }
 
+let isCheckRun = snapshotPath != nil || args.contains("--open-claude")
+
 // One Plip at a time.
-let me = Bundle.main.bundleIdentifier ?? "com.omprabhu31.plip-overlay"
-if snapshotPath == nil, !args.contains("--open-claude"), NSRunningApplication.runningApplications(withBundleIdentifier: me).contains(where: { $0 != .current }) {
+let me = Bundle.main.bundleIdentifier ?? serviceLabel
+if !isCheckRun, NSRunningApplication.runningApplications(withBundleIdentifier: me).contains(where: { $0 != .current }) {
     exit(0)
+}
+
+// Opening Plip Overlay yourself (not launchd at login) turns it back on.
+let isFromLogin = ProcessInfo.processInfo.environment["XPC_SERVICE_NAME"] == serviceLabel
+if !isCheckRun, !isFromLogin, FileManager.default.fileExists(atPath: disabledMarker.path) {
+    try? FileManager.default.removeItem(at: disabledMarker)
+    launchctl("enable", "gui/\(getuid())/\(serviceLabel)")
 }
 
 let app = NSApplication.shared
